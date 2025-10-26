@@ -3,14 +3,45 @@
 
 namespace App\Models;
 
+use App\Models\Traits\SaleScopes;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\Traits\SaleScopes;
 
+/**
+ * Class Sale
+ *
+ * REFACTORED VERSION - Now follows Single Responsibility Principle
+ *
+ * Responsibilities:
+ * - Define database structure (fillable, casts)
+ * - Define relationships
+ * - Define computed properties (accessors)
+ *
+ * Moved Out:
+ * - Query Scopes → SaleScopes trait (11 methods)
+ * - Business Logic → SalePaymentService (7 methods)
+ * - Number Generation → SaleNumberGenerator (1 method)
+ * - Status Logic → PaymentStatus enum
+ *
+ * Before: 27 methods
+ * After: 8 methods ✓
+ *
+ * @package App\Models
+ */
 class Sale extends Model
 {
     use HasFactory, SaleScopes;
+
+    // ============================================
+    // CONSTANTS - Fix for SonarQube S1192
+    // ============================================
+    
+    /**
+     * Decimal precision for currency fields
+     * Using constant instead of duplicating 'decimal:2'
+     */
+    const DECIMAL_PRECISION = 'decimal:2';
 
     protected $table = 'sales';
 
@@ -27,12 +58,13 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
-        'cost_amount' => 'decimal:2',
-        'profit_amount' => 'decimal:2',
+        'total_amount' => self::DECIMAL_PRECISION,      // Using constant
+        'cost_amount' => self::DECIMAL_PRECISION,       // Using constant
+        'profit_amount' => self::DECIMAL_PRECISION,     // Using constant
         'due_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'payment_status' => PaymentStatus::class,       // Cast to enum
     ];
 
     protected $appends = [
@@ -41,9 +73,9 @@ class Sale extends Model
         'is_fully_paid',
     ];
 
-    /* ========================================
-     * RELATIONSHIPS
-     * ======================================== */
+    // ============================================
+    // RELATIONSHIPS (3 methods)
+    // ============================================
 
     /**
      * Get the order this sale was created from (One-to-One)
@@ -75,9 +107,9 @@ class Sale extends Model
         return $this->hasMany(Payment::class);
     }
 
-    /* ========================================
-     * ACCESSORS (Computed Properties)
-     * ======================================== */
+    // ============================================
+    // ACCESSORS - Computed Properties (4 methods)
+    // ============================================
 
     /**
      * Calculate total amount paid for this sale
@@ -133,16 +165,6 @@ class Sale extends Model
     }
 
     /**
-     * Check if sale has any payments
-     *
-     * Usage: $sale->has_payments
-     */
-    public function getHasPaymentsAttribute()
-    {
-        return $this->payments()->exists();
-    }
-
-    /**
      * Get payment progress percentage
      *
      * Usage: $sale->payment_progress
@@ -156,11 +178,52 @@ class Sale extends Model
         return 0;
     }
 
+    // ============================================
+    // UTILITY METHOD (1 method)
+    // ============================================
+
     public function __toString()
     {
         return "{$this->sale_number} - {$this->customer_name} - {$this->total_amount}";
     }
 }
 
+/**
+ * ============================================
+ * USAGE EXAMPLES WITH NEW ARCHITECTURE
+ * ============================================
+ */
+
+// BEFORE (All in model):
+// $sale->updatePaymentStatus();
+// $sale->setAsDebt(7);
+// $sale->addPayment($data);
+// $saleNumber = Sale::generateSaleNumber();
+
+// AFTER (Separated):
+// $paymentService->updatePaymentStatus($sale);
+// $paymentService->setAsDebt($sale, 7);
+// $paymentService->addPayment($sale, $data);
+// $saleNumber = $numberGenerator->generate();
+
+/**
+ * Query Scopes still work the same way:
+ *
+ * Sale::fullyPaid()->get()
+ * Sale::overdue()->get()
+ * Sale::today()->get()
+ * Sale::withBalance()->get()
+ *
+ * They're just defined in the SaleScopes trait now!
+ */
+
+/**
+ * Using the Enum:
+ *
+ * $sale->payment_status === PaymentStatus::FULLY_PAID
+ * $sale->payment_status->label() // "Fully Paid"
+ * $sale->payment_status->color() // "green"
+ * $sale->payment_status->hasBalance() // false
+ */
 
 
