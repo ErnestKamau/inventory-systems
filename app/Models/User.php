@@ -119,7 +119,8 @@ class User extends Authenticatable
 
     public function setPhoneNumberAttribute($value)
     {
-        $clean = preg_replace('/[^0-9]/', '', $value);
+        // Remove all non-digit characters (replaces [^0-9] with \D)
+        $clean = preg_replace('/\D/', '', $value);
 
         // Convert local numbers (e.g., 0712...) to 254 format
         if (str_starts_with($clean, '0')) {
@@ -128,6 +129,7 @@ class User extends Authenticatable
 
         $this->attributes['phone_number'] = $clean;
     }
+
 
     /* ========================================
      * HELPER METHODS
