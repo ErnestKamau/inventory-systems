@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -96,7 +95,7 @@ class User extends Authenticatable
 
     /**
      * Get total number of orders placed
-     * 
+     *
      * Usage: $user->total_orders
      */
     public function getTotalOrdersAttribute()
@@ -110,7 +109,7 @@ class User extends Authenticatable
 
     /**
      * Hash password before saving
-     * 
+     *
      * Auto-triggered when: $user->password = 'plaintext'
      */
     public function setPasswordAttribute($value)
