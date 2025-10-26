@@ -120,8 +120,14 @@ class User extends Authenticatable
 
     public function setPhoneNumberAttribute($value)
     {
-        // Remove all non-numeric characters
-        $this->attributes['phone_number'] = preg_replace('/[^0-9]/', '', $value);
+        $clean = preg_replace('/[^0-9]/', '', $value);
+
+        // Convert local numbers (e.g., 0712...) to 254 format
+        if (str_starts_with($clean, '0')) {
+            $clean = '254' . substr($clean, 1);
+        }
+
+        $this->attributes['phone_number'] = $clean;
     }
 
     /* ========================================
