@@ -1,4 +1,5 @@
 <?php
+// database/migrations/0001_01_01_000000_create_users_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,20 +14,31 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            
+            // Your custom fields
+            $table->string('username', 150)->unique();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
+            $table->string('phone_number', 15)->unique();
+            $table->enum('gender', ['Male', 'Female']);
+            $table->enum('role', ['admin', 'customer'])->default('customer');
+            
+            $table->rememberToken(); // For "remember me" functionality
             $table->timestamps();
+            
+            // Indexes
+            $table->index('role');
+            $table->index(['role', 'created_at']);
         });
 
+        // Password reset tokens table (keep this)
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // Sessions table (keep this if using database sessions)
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
