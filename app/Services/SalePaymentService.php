@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Models\Sale;
 use App\Models\Payment;
+use App\Enums\PaymentStatus;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -44,13 +45,13 @@ class SalePaymentService
         $totalPaid = $sale->total_paid;
         
         if ($totalPaid >= $sale->total_amount) {
-            $sale->payment_status = 'fully-paid';
+            $sale->payment_status = PaymentStatus::FULLY_PAID;
         } elseif ($sale->due_date && now()->gt($sale->due_date)) {
-            $sale->payment_status = 'overdue';
+            $sale->payment_status = PaymentStatus::OVERDUE;
         } elseif ($totalPaid > 0) {
-            $sale->payment_status = 'partial';
+            $sale->payment_status = PaymentStatus::PARTIAL;
         } else {
-            $sale->payment_status = 'no-payment';
+            $sale->payment_status = PaymentStatus::NO_PAYMENT;
         }
         
         $sale->save();
