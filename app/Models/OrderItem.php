@@ -119,3 +119,4 @@ class OrderItem extends Model
         return "{$this->product->name} x {$this->quantity}";
     }
 }
+

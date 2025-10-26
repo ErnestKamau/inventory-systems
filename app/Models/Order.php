@@ -307,3 +307,4 @@ class Order extends Model
         return "{$this->customer_name} - ({$this->order_time} {$this->order_date})";
     }
 }
+

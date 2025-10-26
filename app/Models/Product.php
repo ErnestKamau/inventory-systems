@@ -88,7 +88,7 @@ class Product extends Model
 
     /**
      * Filter only active products
-     * 
+     *
      * Usage: Product::active()->get()
      */
     public function scopeActive(Builder $query)
